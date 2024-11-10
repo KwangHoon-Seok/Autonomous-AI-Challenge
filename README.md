@@ -1,143 +1,62 @@
-# Autonomous-AI-Challenge
-2024 자율주행 인공지능 챌린지(3D 동적객체 검출)
-->주어진 LiDAR point를 사용하여 3D 객체 검출
-### [Model Architecture]
-<PV-RCNN>
-![image](https://github.com/user-attachments/assets/e53c7e5b-3566-4add-8cb4-64124a6b31dc)
 
-<PV-RCNN++>
-![image](https://github.com/user-attachments/assets/5047ed61-b79d-4d37-8236-f45f54e0dc09)
+Autonomous AI Challenge 2024
+3D 동적 객체 검출 자율주행 인공지능 챌린지
+목표: LiDAR 포인트 클라우드를 사용하여 3D 객체 검출 수행
+
+모델 아키텍처 (Model Architecture)
+PV-RCNN
 
 
+PV-RCNN++
 
 
-[데이터 구성]
-### 1. train.pkl - DataSet 및 Label에 대한 정확한 정보
-   [
-    {
-        'point_cloud': {
-            'num_features': 4,                 # 포인트 클라우드의 각 포인트당 특징 수 (보통 x, y, z, intensity)
-            'lidar_idx': '00000001'             # 각 Lidar 스캔의 고유 식별자
-        },
-        'annos': {
-            'name': np.array([
-                'Vehicle', 'Vehicle', 'Vehicle', 'Vehicle', 'Vehicle', 'Vehicle', 
-                'Vehicle', 'Vehicle', 'Vehicle', 'Vehicle', 'Vehicle', 'Vehicle', 
-                'Vehicle', 'Vehicle', 'Vehicle', 'Vehicle', 'Vehicle', 'Vehicle', 
-                'Vehicle', 'Vehicle', 'Vehicle', 'Vehicle', 'Vehicle', 'Vehicle', 
-                'Vehicle'
-            ]),  # 객체 이름의 배열
-            'gt_boxes_lidar': np.array([
-                [-0.047037, -19.070677, 1.126073, 4.835565, 1.934771, 1.537523, 2.653253],
-                [3.590872, -12.771045, 1.322447, 5.00492, 2.018615, 1.601063, 2.605351],
-                [55.624241, -11.98928, 2.889861, 3.596104, 1.803264, 1.603259, 0.463385],
-                # ...
-                [13.531695, 46.529221, 0.438992, 4.637841, 1.989035, 1.698529, -0.020413]
-            ]),  # 각 객체에 대한 7D 바운딩 박스 좌표
-            'num_points_in_gt': np.array([
-                775, 2887, 31, 131, 3465, 2137, 520, 880, 222, 2726, 1195, 
-                625, 367, 764, 37, 407, 36, 104, 315, 1438, 17, 25, 5, 19, 26
-            ]),  # 각 바운딩 박스 내의 포인트 개수
-            'difficulty': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])  # 난이도 레벨
-        }
-    },
-    # ... 추가 항목들
-]
-
-### 2. /db_infos_pkl - gt 정보
-{
-    'Vehicle': [
-        {
-            'name': 'Vehicle',
-            'path': 'gt_database/00000000_Vehicle_0.bin',
-            'gt_idx': 0,
-            'box3d_lidar': np.array([0.507079, -19.058336, 1.126073, 4.835565, 1.934771, 1.537523, 2.653356], dtype=np.float32),
-            'num_points_in_gt': 846
-        },
-        {
-            'name': 'Vehicle',
-            'path': 'gt_database/00000001_Vehicle_1.bin',
-            'gt_idx': 1,
-            'box3d_lidar': np.array([...], dtype=np.float32),
-            'num_points_in_gt': ...
-        },
-        # ... (다수의 Vehicle 객체)
-    ],
-    'Pedestrian': [
-        {
-            'name': 'Pedestrian',
-            'path': 'gt_database/00000015_Pedestrian_8.bin',
-            'gt_idx': 8,
-            'box3d_lidar': np.array([18.770025, 6.158173, 0.86841, 0.898277, 0.802549, 1.698892, -1.564585], dtype=np.float32),
-            'num_points_in_gt': 23
-        },
-        # ... (다수의 Pedestrian 객체)
-    ],
-    'Cyclist': [
-        {
-            'name': 'Cyclist',
-            'path': 'gt_database/00000100_Cyclist_6.bin',
-            'gt_idx': 6,
-            'box3d_lidar': np.array([14.644975, -5.108981, 1.224325, 1.102101, 0.798372, 1.854168, 0.07854], dtype=np.float32),
-            'num_points_in_gt': 346
-        },
-        # ... (다수의 Cyclist 객체)
-    ]
-}
-
-### 3. gt_database - Label에 대한 정보
-  -> Label의 class_name이 /label 에서 정해졌을 때 그 frame에서 물체 각각의 바운딩 박스에 있는 포인트들에 대한 정보
-
-### 4. /points(.npy에 대한 정보)
-  -> 한 frame당 모든 point
-Shape of point cloud: (118674, 4)
-Data type of point cloud: float32
-Each point has 4 values.
-First few points in the point cloud:
-[[-2.9074268e+01 -1.9766258e-02  9.9172888e+00  3.8039219e-01]
- [-3.5565208e+01 -2.0658094e-02  9.0879440e+00  1.1764707e-01]
- [-3.2280708e+01 -1.5841596e-02  6.6269894e+00  3.9607847e-01]
- [-3.5376541e+01 -1.4064273e-02  5.1457205e+00  2.3137257e-01]
- [-2.9074268e+01 -1.9766258e-02  9.9172888e+00  3.8039219e-01]]
-
-### 5. /labels 정보, 한 frame에 물체와 바운딩 박스 정보
-  [x,y,z,dx,dy,dz,yaw]
+데이터 구성 (Data Configuration)
+1. train.pkl - 데이터셋 및 라벨 정보
+포인트 클라우드 (point_cloud)
+num_features: 포인트 당 특징 수 (예: x, y, z, intensity)
+lidar_idx: 각 LiDAR 스캔의 고유 식별자
+주석 정보 (annos)
+name: 객체 이름 배열 (예: 'Vehicle')
+gt_boxes_lidar: 7D 바운딩 박스 좌표
+num_points_in_gt: 각 바운딩 박스 내의 포인트 개수
+difficulty: 난이도 레벨 배열
+2. db_infos_pkl - gt 정보
+각 객체 클래스별 정보 (예: Vehicle, Pedestrian, Cyclist)
+구성 요소
+name: 객체 이름
+path: GT 데이터 파일 경로
+gt_idx: GT 인덱스
+box3d_lidar: 3D 바운딩 박스 좌표
+num_points_in_gt: GT 내의 포인트 개수
+3. gt_database - 라벨 정보
+/label 파일에 정의된 클래스의 각 바운딩 박스에 포함된 포인트 정보 제공
+4. points (.npy 파일)
+각 프레임의 모든 포인트 데이터를 포함
+Shape: (118674, 4)
+Data Type: float32
+포인트 예시:
+css
+코드 복사
+[[-2.9074268e+01, -1.9766258e-02, 9.9172888e+00, 3.8039219e-01],
+ [-3.5565208e+01, -2.0658094e-02, 9.0879440e+00, 1.1764707e-01],
+ [-3.2280708e+01, -1.5841596e-02, 6.6269894e+00, 3.9607847e-01],
+ ...]
+5. labels 정보
+각 프레임당 물체와 바운딩 박스 정보 ([x, y, z, dx, dy, dz, yaw])
+성능 결과 (Results)
+1. PV-RCNN (Epoch 10)
+Object Type	Level 1 AP	Level 1 APH	Level 1 APL	Level 2 AP	Level 2 APH	Level 2 APL
+Vehicle	0.7724	0.7597	0.7724	0.7566	0.7442	0.7566
+Pedestrian	0.4173	0.2157	0.4173	0.4024	0.2080	0.4024
+Sign	0.0000	0.0000	0.0000	0.0000	0.0000	0.0000
+Cyclist	0.6611	0.5866	0.6611	0.6428	0.5704	0.6428
+2. PV-RCNN (Epoch 30)
 
 
-## Result 
-1. pv-rcnn(Epoch 10)
-OBJECT_TYPE_TYPE_VEHICLE_LEVEL_1/AP: 0.7724
-OBJECT_TYPE_TYPE_VEHICLE_LEVEL_1/APH: 0.7597
-OBJECT_TYPE_TYPE_VEHICLE_LEVEL_1/APL: 0.7724
-OBJECT_TYPE_TYPE_VEHICLE_LEVEL_2/AP: 0.7566 
-OBJECT_TYPE_TYPE_VEHICLE_LEVEL_2/APH: 0.7442
-OBJECT_TYPE_TYPE_VEHICLE_LEVEL_2/APL: 0.7566
-OBJECT_TYPE_TYPE_PEDESTRIAN_LEVEL_1/AP: 0.4173
-OBJECT_TYPE_TYPE_PEDESTRIAN_LEVEL_1/APH: 0.2157
-OBJECT_TYPE_TYPE_PEDESTRIAN_LEVEL_1/APL: 0.4173
-OBJECT_TYPE_TYPE_PEDESTRIAN_LEVEL_2/AP: 0.4024
-OBJECT_TYPE_TYPE_PEDESTRIAN_LEVEL_2/APH: 0.2080
-OBJECT_TYPE_TYPE_PEDESTRIAN_LEVEL_2/APL: 0.4024
-OBJECT_TYPE_TYPE_SIGN_LEVEL_1/AP: 0.0000
-OBJECT_TYPE_TYPE_SIGN_LEVEL_1/APH: 0.0000
-OBJECT_TYPE_TYPE_SIGN_LEVEL_1/APL: 0.0000
-OBJECT_TYPE_TYPE_SIGN_LEVEL_2/AP: 0.0000
-OBJECT_TYPE_TYPE_SIGN_LEVEL_2/APH: 0.0000
-OBJECT_TYPE_TYPE_SIGN_LEVEL_2/APL: 0.0000
-OBJECT_TYPE_TYPE_CYCLIST_LEVEL_1/AP: 0.6611
-OBJECT_TYPE_TYPE_CYCLIST_LEVEL_1/APH: 0.5866
-OBJECT_TYPE_TYPE_CYCLIST_LEVEL_1/APL: 0.6611
-OBJECT_TYPE_TYPE_CYCLIST_LEVEL_2/AP: 0.6428
-OBJECT_TYPE_TYPE_CYCLIST_LEVEL_2/APH: 0.5704
-OBJECT_TYPE_TYPE_CYCLIST_LEVEL_2/APL: 0.6428
+3. PV-RCNN++ with ResNet Backbone (Epoch 30)
 
-2. pv-rcnn(Epoch 30)
-![image](https://github.com/user-attachments/assets/15dcc4f7-c311-4244-ae69-4b0870d84a4a)
 
-3. pv-rcnn++Resnet(Epoch 30)
-![image](https://github.com/user-attachments/assets/515593ae-7549-451a-9191-479243b57797)
+학습 환경: GPU 3080 × 4
+추가 결과 (Range to Image Transformation)
 
----학습 환경 gpu: 3080 * 4---
 
-## Range to Image - Result
-![image](https://github.com/user-attachments/assets/d114791e-672e-4560-8ca3-d673d0f34edf)
