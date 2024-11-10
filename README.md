@@ -3,9 +3,11 @@
 ->주어진 LiDAR point를 사용하여 3D 객체 검출
 ### [Model Architecture]
 <PV-RCNN>
-![image](https://github.com/user-attachments/assets/793877e2-b7ae-49c2-82a5-bd333ae4e86f)
+![image](https://github.com/user-attachments/assets/e53c7e5b-3566-4add-8cb4-64124a6b31dc)
+
 <PV-RCNN++>
-![image](https://github.com/user-attachments/assets/19aee7f2-6ed3-4eec-9c16-2da03b2dea4f)
+![image](https://github.com/user-attachments/assets/5047ed61-b79d-4d37-8236-f45f54e0dc09)
+
 
 
 
